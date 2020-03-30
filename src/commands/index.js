@@ -2,7 +2,6 @@ const Discord = require('discord.js');
 const ping = require('./ping');
 const helpGen = require('./help');
 const prefix = require('./config/prefix');
-const voterrole = require('./config/voterrole');
 const addManager = require('./managers/addmanager');
 const delManager = require('./managers/delmanager');
 const managers = require('./managers/managers');
@@ -20,7 +19,6 @@ const commands = new Discord.Collection();
 
 commands.set(ping.name, ping);
 commands.set(prefix.name, prefix);
-commands.set(voterrole.name, voterrole);
 commands.set(addManager.name, addManager);
 commands.set(delManager.name, delManager);
 commands.set(managers.name, managers);
