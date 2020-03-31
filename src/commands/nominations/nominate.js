@@ -42,6 +42,7 @@ module.exports = {
       return;
     }
 
+    // TODO: add a way to disallow nominating certain people. Specifically the election bot itself
     dbClient.addNomination(this.serverDb, userId, positionId, nominatorId);
     message.channel.send('Nomination added');
   },
