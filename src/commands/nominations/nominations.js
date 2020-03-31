@@ -69,6 +69,7 @@ module.exports = {
 
       const embed = new MessageEmbed({
         title,
+        description: fields.length ? null : 'None yet',
         fields,
       });
       message.channel.send(embed);
