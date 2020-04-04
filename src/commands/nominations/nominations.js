@@ -37,7 +37,7 @@ module.exports = {
           const nomMention = message.guild.member(nom.userId);
           const count = nom.nominators.length;
           const nominatorsStr = nom.nominators.map(user => message.guild.member(user)).join(', ');
-          return `${nomMention} (${count}): ${nominatorsStr}`;
+          return `\\+${nomMention} (${count}) – ${nominatorsStr}`;
         })
         .join('\n');
       if (nomStr.length > LIMITS.FIELD_VALUE) {
