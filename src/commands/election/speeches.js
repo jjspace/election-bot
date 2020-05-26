@@ -1,23 +1,16 @@
 const { MessageEmbed } = require('discord.js');
 const { shuffle } = require('lodash');
 const dbClient = require('../../db/dbClient');
+const { withServerDB } = require('../commandMods');
 
-module.exports = {
+const speeches = {
   name: 'speeches',
   description: 'Output an order for speeches to occur',
   usage: 'speeches [?position id]',
+  arguments: { max: 1 },
   restricted: true,
-  execute(message, args) {
-    if (!this.serverDb) {
-      throw new Error('Missing ServerDb');
-    }
-
-    if (args.length > 1) {
-      message.channel.send('Too many arguments, max 1');
-      return;
-    }
-
-    const nomListStr = list =>
+  execute: function (serverDb, message, args) {
+    const nomListStr = (list) =>
       list
         .map((nom, i) => {
           const nomMention = message.guild.member(nom.userId);
@@ -27,8 +20,8 @@ module.exports = {
 
     if (args.length) {
       const positionId = args.shift();
-      const position = dbClient.getPosition(this.serverDb, positionId);
-      const nominees = dbClient.getNominations(this.serverDb, { positionId });
+      const position = dbClient.getPosition(serverDb, positionId);
+      const nominees = dbClient.getNominations(serverDb, { positionId });
 
       const embed = new MessageEmbed({
         title: `Speech order for **${position.name}**`,
@@ -39,10 +32,10 @@ module.exports = {
 
       message.channel.send(embed);
     } else {
-      const positions = dbClient.getPositions(this.serverDb);
+      const positions = dbClient.getPositions(serverDb);
 
-      const fields = positions.map(pos => {
-        const noms = dbClient.getNominations(this.serverDb, { positionId: pos.id });
+      const fields = positions.map((pos) => {
+        const noms = dbClient.getNominations(serverDb, { positionId: pos.id });
         return {
           name: `**${pos.name}**`,
           value: noms.length ? nomListStr(shuffle(noms)) : 'No nominees for this position',
@@ -57,3 +50,5 @@ module.exports = {
     }
   },
 };
+
+module.exports = withServerDB(speeches);

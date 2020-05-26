@@ -1,18 +1,15 @@
 const { MessageEmbed } = require('discord.js');
 const dbClient = require('../../db/dbClient');
+const { withServerDB } = require('../commandMods');
 
-module.exports = {
+const managers = {
   name: 'managers',
   description: 'List manager roles or users',
-  execute(message) {
-    if (!this.serverDb) {
-      throw new Error('Missing ServerDb');
-    }
+  execute(serverDb, message) {
+    const { roles, users } = dbClient.getManagers(serverDb);
 
-    const { roles, users } = dbClient.getManagers(this.serverDb);
-
-    const roleMentions = roles.map(roleId => message.guild.roles.cache.get(roleId));
-    const userMentions = users.map(userId => message.guild.member(userId));
+    const roleMentions = roles.map((roleId) => message.guild.roles.cache.get(roleId));
+    const userMentions = users.map((userId) => message.guild.member(userId));
     let fields = [];
     if (roleMentions.length) {
       fields.push({
@@ -33,3 +30,5 @@ module.exports = {
     message.channel.send(embed);
   },
 };
+
+module.exports = withServerDB(managers);

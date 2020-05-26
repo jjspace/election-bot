@@ -1,31 +1,29 @@
 const dbClient = require('../../db/dbClient');
+const { withServerDB } = require('../commandMods');
 
-module.exports = {
+const addPosition = {
   name: 'addposition',
-  description: 'Add an elected position',
-  usage: 'addposition [position id] [position name]',
+  description: 'Add an elected position. If a name is not provided the id will be used',
+  usage: 'addposition [position id] [position name?]',
+  arguments: { min: 1, errorMsg: 'Must provide a name/id' },
   restricted: true,
-  execute(message, args) {
-    if (!this.serverDb) {
-      throw new Error('Missing ServerDb');
-    }
-
-    if (!args.length) {
-      message.channel.send('Must provide a name');
-      return;
-    }
-
+  execute(serverDb, message, args) {
     const positionId = args.shift();
-    const positionName = args.join(' ');
+    let positionName = args.join(' ');
+    if (!positionName) positionName = positionId;
 
-    if (dbClient.getPosition(this.serverDb, positionId)) {
+    if (dbClient.getPosition(serverDb, positionId)) {
       message.channel.send(`Position with the id "${positionId}" already exists`);
       return;
     }
 
     // TODO: consider adding a way to do description all in one go
-    dbClient.addPosition(this.serverDb, positionId, positionName);
-    message.channel.send(`${positionName} has been added with the id: "${positionId}"`);
+    dbClient.addPosition(serverDb, positionId, positionName);
+    message.channel.send(
+      `${positionName || positionId} has been added with the id: "${positionId}"`
+    );
     return;
   },
 };
+
+module.exports = withServerDB(addPosition);

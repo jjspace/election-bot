@@ -1,15 +1,22 @@
+const { MessageMentions } = require('discord.js');
 const dbClient = require('../../db/dbClient');
+const { withServerDB } = require('../commandMods');
+const { noMentionOpts } = require('../../utils');
 
-module.exports = {
+const delmanager = {
   name: 'delmanager',
   description: 'Remove manager role or user',
   usage: 'delmanager [userMention|roleMention]',
+  arguments: {
+    exact: 1,
+    errorMsg: {
+      highMsg: 'You may only add one role/user at a time',
+      lowMsg: 'You must specify a role/user to remove',
+    },
+    structure: [[MessageMentions.USERS_PATTERN], [MessageMentions.ROLES_PATTERN]],
+  },
   restricted: true,
-  execute(message) {
-    if (!this.serverDb) {
-      throw new Error('Missing ServerDb');
-    }
-
+  execute(serverDb, message) {
     // TODO: make more lenient with plaintext args for role names
     //       check against message.guild.roles for valid role name
     const mentionedRoles = message.mentions.roles;
@@ -18,7 +25,7 @@ module.exports = {
       (mentionedRoles.size !== 1 && mentionedUsers.size !== 1) ||
       (mentionedRoles.size === 1 && mentionedUsers.size === 1)
     ) {
-      message.channel.send('Must mention one and only one role to remove');
+      message.channel.send('You must mention a role/user to remove them');
       return;
     }
 
@@ -31,14 +38,14 @@ module.exports = {
       const roleId = mentionedRole.id;
       const mention = mentionedRole.toString();
 
-      const currManagers = dbClient.getManagers(this.serverDb);
+      const currManagers = dbClient.getManagers(serverDb);
       if (!currManagers.roles.includes(roleId)) {
-        message.channel.send(`${mention} not in list`);
+        message.channel.send(`${mention} not in list`, noMentionOpts);
         return;
       }
 
-      dbClient.removeManagerRole(this.serverDb, roleId);
-      message.channel.send(`Removed role ${mention}`);
+      dbClient.removeManagerRole(serverDb, roleId);
+      message.channel.send(`Removed role ${mention}`, noMentionOpts);
       return;
     }
 
@@ -48,15 +55,17 @@ module.exports = {
       const userId = mentionedUser.id;
       const mention = mentionedUser.toString();
 
-      const currManagers = dbClient.getManagers(this.serverDb);
+      const currManagers = dbClient.getManagers(serverDb);
       if (!currManagers.users.includes(userId)) {
-        message.channel.send(`${mention} not in list`);
+        message.channel.send(`${mention} not in list`, noMentionOpts);
         return;
       }
 
-      dbClient.removeManagerUser(this.serverDb, userId);
-      message.channel.send(`Removed user ${mention}`);
+      dbClient.removeManagerUser(serverDb, userId);
+      message.channel.send(`Removed user ${mention}`, noMentionOpts);
       return;
     }
   },
 };
+
+module.exports = withServerDB(delmanager);

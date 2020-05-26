@@ -1,21 +1,18 @@
 const { MessageEmbed } = require('discord.js');
 const dbClient = require('../../db/dbClient');
+const { withServerDB } = require('../commandMods');
 
-module.exports = {
+const positions = {
   name: 'positions',
   description: 'Display the current positions',
-  execute(message) {
-    if (!this.serverDb) {
-      throw new Error('Missing ServerDb');
-    }
-
-    const positions = dbClient.getPositions(this.serverDb);
+  execute(serverDb, message) {
+    const positions = dbClient.getPositions(serverDb);
 
     const fields = [];
 
-    positions.forEach(position => {
+    positions.forEach((position) => {
       fields.push({
-        name: `**${position.name}** (${position.id})`,
+        name: `**${position.name || position.id}** (${position.id})`,
         value: position.desc || 'No Description',
       });
     });
@@ -28,3 +25,5 @@ module.exports = {
     return;
   },
 };
+
+module.exports = withServerDB(positions);

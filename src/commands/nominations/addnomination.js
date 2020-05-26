@@ -2,22 +2,25 @@ const {
   MessageMentions: { USERS_PATTERN },
 } = require('discord.js');
 const dbClient = require('../../db/dbClient');
+const { withServerDB } = require('../commandMods');
+const { noMentionOpts, positionIdPattern } = require('../../utils');
 
-module.exports = {
+const addnomination = {
   name: 'addnomination',
-  description: "Add a member's nomination",
+  description:
+    "Add a member's nomination. Think 'Add nomination for position's nominee from nominator'",
   usage: 'addnomination [position id] [@nominee] [@nominator]',
+  arguments: {
+    exact: 3,
+    errorMsg: {
+      highMsg: 'Wrong number of arguments, require 3, `[position id] [@nominee] [@nominator]`',
+      lowMsg: 'Wrong number of arguments, require 3, `[position id] [@nominee] [@nominator]`',
+      structMsg: 'Wrong type of arguments, `[position id] [@nominee] [@nominator]`',
+    },
+    structure: [positionIdPattern, USERS_PATTERN, USERS_PATTERN],
+  },
   restricted: true,
-  execute(message, args) {
-    if (!this.serverDb) {
-      throw new Error('Missing ServerDb');
-    }
-
-    if (args.length !== 3) {
-      message.channel.send('Improper number of arguments, require 3');
-      return;
-    }
-
+  execute(serverDb, message, args) {
     // We have to check this way because the order of message.mentions.users does not necessarily
     // match the order in the message
     const fullMessage = args.join(' ');
@@ -33,16 +36,19 @@ module.exports = {
     const nomineeMention = message.guild.member(nomineeId);
     const nominatorMention = message.guild.member(nominatorId);
 
-    const currentNom = dbClient.getNomination(this.serverDb, nomineeId, positionId);
+    const currentNom = dbClient.getNomination(serverDb, nomineeId, positionId);
     if (currentNom && currentNom.nominators.includes(nominatorId)) {
       message.channel.send(`That nomination already exists`);
       return;
     }
 
-    dbClient.addNomination(this.serverDb, nomineeId, positionId, nominatorId);
+    dbClient.addNomination(serverDb, nomineeId, positionId, nominatorId);
     message.channel.send(
-      `Nomination of ${nomineeMention} for (${positionId}) from ${nominatorMention} added`
+      `Added nomination of ${nomineeMention} for (${positionId}) from ${nominatorMention}`,
+      noMentionOpts
     );
     return;
   },
 };
+
+module.exports = withServerDB(addnomination);

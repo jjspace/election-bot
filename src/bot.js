@@ -2,9 +2,10 @@ const Discord = require('discord.js');
 const { discordBotToken } = require('./config');
 const logger = require('./logger');
 const commands = require('./commands');
-const db = require('./db/db').db();
+const db = require('./db/db');
 const dbClient = require('./db/dbClient');
 const isManager = require('./isManager');
+const { validateArgs } = require('./utils');
 
 const client = new Discord.Client();
 client.commands = commands;
@@ -12,7 +13,7 @@ client.cooldowns = new Discord.Collection();
 
 client.once('ready', () => {
   logger.info(
-    `I am ready! I am "${client.user.username}" connected to ${client.guilds.size} guilds`
+    `I am ready! I am "${client.user.username}" connected to ${client.guilds.cache.size} guilds`
   );
   if (process.send) {
     // send 'ready' for pm2
@@ -20,7 +21,7 @@ client.once('ready', () => {
   }
 });
 
-client.on('guildCreate', guild => {
+client.on('guildCreate', (guild) => {
   logger.info(
     `Invited to join new guild: "${guild.name || 'unknownName'}:${guild.id || 'unknownID'}"`
   );
@@ -42,13 +43,13 @@ client.on('guildCreate', guild => {
   }
 });
 
-client.on('message', message => {
+client.on('message', (message) => {
   const { guild, author, content } = message;
 
   logger.info(
-    `Received message: "${message.content}" (${
-      message.embeds.length
-    } embeds) from "${author.username || 'unknownAuthor'}:${author.id || 'unknownId'}"`
+    `Received message: "${message.content}" (${message.embeds.length} embeds) from "${
+      author.username || 'unknownAuthor'
+    }:${author.id || 'unknownId'}"`
   );
 
   // === Gatekeeping ===
@@ -85,6 +86,7 @@ client.on('message', message => {
     const args = content.slice(commandPrefix.length).split(/\s+/);
     const commandName = args.shift().toLowerCase();
 
+    // check for and retrieve command object
     if (!client.commands.has(commandName)) {
       message.channel.send(
         `Unrecognized command. Use \`${commandPrefix}help\` to see available commands`
@@ -93,12 +95,21 @@ client.on('message', message => {
     }
     const command = client.commands.get(commandName);
 
+    // Try executing the command, catch errors to log and alert
     try {
-      command.serverDb = serverDb;
+      // check permission to use this command
       if (command.restricted && !isManager(serverDb, message.member)) {
         message.channel.send('You do not have permission for this command');
         return;
       }
+
+      // check arg count
+      const argErrorMsg = validateArgs(args, command.arguments);
+      if (command.arguments && argErrorMsg) {
+        message.channel.send(argErrorMsg);
+        return;
+      }
+
       command.execute(message, args);
       return;
     } catch (error) {
@@ -108,8 +119,10 @@ client.on('message', message => {
   }
 });
 
+// Initiate bot login
 client.login(discordBotToken);
 
+// Shutdown safely
 process.on('SIGINT', () => {
   logger.info('Caught Interupt Signal, quitting');
 

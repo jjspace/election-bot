@@ -1,28 +1,21 @@
 const dbClient = require('../../db/dbClient');
+const { withServerDB } = require('../commandMods');
 
 const PositionProps = ['name', 'desc'];
-const propDisplay = PositionProps.map(p => `"${p}"`).join(', ');
+const propDisplay = PositionProps.map((p) => `"${p}"`).join(', ');
 
-module.exports = {
+const editposition = {
   name: 'editposition',
   description: "Edit a position's details",
   usage: 'editposition [position id] ["name"|"desc"] [new value]',
+  arguments: { min: 3, errorMsg: { lowMsg: 'Must provide an id, property and new value' } },
   restricted: true,
-  execute(message, args) {
-    if (!this.serverDb) {
-      throw new Error('Missing ServerDb');
-    }
-
-    if (args.length < 3) {
-      message.channel.send('Must provide an id, property and new value');
-      return;
-    }
-
+  execute(serverDb, message, args) {
     const positionId = args.shift();
     const positionProp = args.shift();
     const newVal = args.join(' ');
 
-    if (!dbClient.getPosition(this.serverDb, positionId)) {
+    if (!dbClient.getPosition(serverDb, positionId)) {
       message.channel.send(`Position with id "${positionId}" does not exist`);
       return;
     }
@@ -34,8 +27,10 @@ module.exports = {
       return;
     }
 
-    dbClient.editPosition(this.serverDb, positionId, { [positionProp]: newVal });
+    dbClient.editPosition(serverDb, positionId, { [positionProp]: newVal });
     message.channel.send(`Position updated`);
     return;
   },
 };
+
+module.exports = withServerDB(editposition);

@@ -1,23 +1,18 @@
 const dbClient = require('../../db/dbClient');
+const { withServerDB } = require('../commandMods');
 
-module.exports = {
+const prefix = {
   name: 'prefix',
   usage: 'prefix [prefixCharacter]',
   description: 'Set the prefix to use for commands for this bot',
+  arguments: { exact: 1, errorMsg: 'Wrong number of arguments, requires 1' },
   restricted: true,
-  execute(message, args) {
-    if (!this.serverDb) {
-      throw new Error('Missing ServerDb');
-    }
-
-    if (args.length !== 1) {
-      message.channel.send('Improper number of arguments, requires 1');
-      return;
-    }
-
+  execute(serverDb, message, args) {
     const newPrefix = args.shift();
 
-    dbClient.setCommandPrefix(this.serverDb, newPrefix);
+    dbClient.setCommandPrefix(serverDb, newPrefix);
     message.channel.send(`Command Prefix updated to \`${newPrefix}\``);
   },
 };
+
+module.exports = withServerDB(prefix);

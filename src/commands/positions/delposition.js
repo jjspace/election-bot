@@ -1,29 +1,28 @@
 const dbClient = require('../../db/dbClient');
+const { withServerDB } = require('../commandMods');
 
-module.exports = {
+const delposition = {
   name: 'delposition',
   description: 'Remove a position',
   usage: 'delposition [position id]',
+  arguments: {
+    exact: 1,
+    errorMsg: { highMsg: 'Only one id is allowed', lowMsg: 'Must provide an id' },
+  },
+
   restricted: true,
-  execute(message, args) {
-    if (!this.serverDb) {
-      throw new Error('Missing ServerDb');
-    }
-
-    if (args.length !== 1) {
-      message.channel.send('Must only provide an id');
-      return;
-    }
-
+  execute(serverDb, message, args) {
     const positionId = args.shift();
 
-    if (!dbClient.getPosition(this.serverDb, positionId)) {
+    if (!dbClient.getPosition(serverDb, positionId)) {
       message.channel.send(`Position with id "${positionId}" does not exist`);
       return;
     }
 
-    dbClient.removePosition(this.serverDb, positionId);
+    dbClient.removePosition(serverDb, positionId);
     message.channel.send(`Position removed`);
     return;
   },
 };
+
+module.exports = withServerDB(delposition);

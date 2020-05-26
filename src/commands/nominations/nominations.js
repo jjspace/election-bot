@@ -1,5 +1,6 @@
 const { MessageEmbed } = require('discord.js');
 const dbClient = require('../../db/dbClient');
+const { withServerDB } = require('../commandMods');
 
 // https://birdie0.github.io/discord-webhooks-guide/other/field_limits.html
 const LIMITS = {
@@ -17,32 +18,24 @@ const LIMITS = {
   SUM_CHAR_IN_EMBED: 6000,
 };
 
-module.exports = {
+const nominations = {
   name: 'nominations',
   description: 'List out current nominations',
   usage: 'nominations [? @mention | positionId]',
-  execute(message, args) {
-    if (!this.serverDb) {
-      throw new Error('Missing ServerDb');
-    }
-
-    if (args.length > 1) {
-      message.channel.send('Too many arguments, max 1');
-      return;
-    }
-
-    const nomListStr = list => {
+  arguments: { max: 1 },
+  execute(serverDb, message, args) {
+    const nomListStr = (list) => {
       let nomStr = list
-        .map(nom => {
+        .map((nom) => {
           const nomMention = message.guild.member(nom.userId);
           const count = nom.nominators.length;
-          const nominatorsStr = nom.nominators.map(user => message.guild.member(user)).join(', ');
+          const nominatorsStr = nom.nominators.map((user) => message.guild.member(user)).join(', ');
           return `\\+${nomMention} (${count}) – ${nominatorsStr}`;
         })
         .join('\n');
       if (nomStr.length > LIMITS.FIELD_VALUE) {
         nomStr = list
-          .map(nom => {
+          .map((nom) => {
             const nomMention = message.guild.member(nom.userId);
             const count = nom.nominators.length;
             return `${nomMention} (${count})`;
@@ -57,10 +50,10 @@ module.exports = {
       const nominee = message.mentions.users.first();
 
       const title = `Nominations for **${nominee.username}**`;
-      const noms = dbClient.getNominations(this.serverDb, { userId: nominee.id });
-      const positions = dbClient.getPositions(this.serverDb);
-      const fields = noms.map(nom => {
-        const position = positions.find(pos => pos.id === nom.positionId);
+      const noms = dbClient.getNominations(serverDb, { userId: nominee.id });
+      const positions = dbClient.getPositions(serverDb);
+      const fields = noms.map((nom) => {
+        const position = positions.find((pos) => pos.id === nom.positionId);
         return {
           name: `**${position.name}** (${position.id})`,
           value: nomListStr([nom]),
@@ -79,13 +72,13 @@ module.exports = {
     // === Position id specified ===
     const positionId = args.shift();
     if (positionId) {
-      const position = dbClient.getPosition(this.serverDb, positionId);
+      const position = dbClient.getPosition(serverDb, positionId);
       if (!position) {
         message.channel.send(`Position with id (${positionId}) does not exist`);
         return;
       }
       const title = `Nominations for **${position.name}** (${position.id})`;
-      const noms = dbClient.getNominations(this.serverDb, { positionId: position.id });
+      const noms = dbClient.getNominations(serverDb, { positionId: position.id });
       const description = noms.length ? nomListStr(noms) : 'None yet';
 
       const embed = new MessageEmbed({
@@ -97,9 +90,9 @@ module.exports = {
     }
 
     // === No subset specified ===
-    const positions = dbClient.getPositions(this.serverDb);
-    const fields = positions.map(pos => {
-      const noms = dbClient.getNominations(this.serverDb, { positionId: pos.id });
+    const positions = dbClient.getPositions(serverDb);
+    const fields = positions.map((pos) => {
+      const noms = dbClient.getNominations(serverDb, { positionId: pos.id });
       return {
         name: `**${pos.name}** (${pos.id})`,
         value: noms.length ? nomListStr(noms) : 'None yet',
@@ -114,3 +107,5 @@ module.exports = {
     return;
   },
 };
+
+module.exports = withServerDB(nominations);
