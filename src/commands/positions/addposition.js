@@ -1,12 +1,13 @@
 const dbClient = require('../../db/dbClient');
 const { withServerDB } = require('../commandMods');
+const requireManager = require('../../inhibitors/requireManager');
 
 const addPosition = {
   name: 'addposition',
   description: 'Add an elected position. If a name is not provided the id will be used',
   usage: 'addposition [position id] [position name?]',
   arguments: { min: 1, errorMsg: 'Must provide a name/id' },
-  restricted: true,
+  inhibitors: [requireManager],
   execute(serverDb, message, args) {
     const positionId = args.shift();
     let positionName = args.join(' ');

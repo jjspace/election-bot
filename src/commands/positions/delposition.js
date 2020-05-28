@@ -1,5 +1,6 @@
 const dbClient = require('../../db/dbClient');
 const { withServerDB } = require('../commandMods');
+const requireManager = require('../../inhibitors/requireManager');
 
 const delposition = {
   name: 'delposition',
@@ -9,8 +10,7 @@ const delposition = {
     exact: 1,
     errorMsg: { highMsg: 'Only one id is allowed', lowMsg: 'Must provide an id' },
   },
-
-  restricted: true,
+  inhibitors: [requireManager],
   execute(serverDb, message, args) {
     const positionId = args.shift();
 

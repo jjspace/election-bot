@@ -4,6 +4,7 @@ const {
 const dbClient = require('../../db/dbClient');
 const { withServerDB } = require('../commandMods');
 const { noMentionOpts, positionIdPattern } = require('../../utils');
+const requireManager = require('../../inhibitors/requireManager');
 
 const delnomination = {
   name: 'delnomination',
@@ -19,7 +20,7 @@ const delnomination = {
     },
     structure: [positionIdPattern, USERS_PATTERN, USERS_PATTERN],
   },
-  restricted: true,
+  inhibitors: [requireManager],
   execute(serverDb, message, args) {
     // We have to check this way because the order of message.mentions.users does not necessarily
     // match the order in the message

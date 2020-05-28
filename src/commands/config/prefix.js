@@ -1,12 +1,13 @@
 const dbClient = require('../../db/dbClient');
 const { withServerDB } = require('../commandMods');
+const requireManager = require('../../inhibitors/requireManager');
 
 const prefix = {
   name: 'prefix',
   usage: 'prefix [prefixCharacter]',
   description: 'Set the prefix to use for commands for this bot',
   arguments: { exact: 1, errorMsg: 'Wrong number of arguments, requires 1' },
-  restricted: true,
+  inhibitors: [requireManager],
   execute(serverDb, message, args) {
     const newPrefix = args.shift();
 

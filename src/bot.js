@@ -97,19 +97,34 @@ client.on('message', (message) => {
 
     // Try executing the command, catch errors to log and alert
     try {
-      // check permission to use this command
-      if (command.restricted && !isManager(serverDb, message.member)) {
-        message.channel.send('You do not have permission for this command');
-        return;
+      // Inhibitors should take a message and return one of the following on whether to allow it
+      // - `false` to *not* block the message
+      // - a simple string reason why it was blocked
+      // - an object of the format: { reason: 'string', response: 'message to send back' }
+      // if no message is provided, silently disallow
+      if (command.inhibitors) {
+        for (inhibit of command.inhibitors) {
+          const inhibition = inhibit(message);
+          if (typeof inhibition === 'object' && inhibition.reason && inhibition.response) {
+            logger.info(`Command inhibited for reason: ${inhibition.reason}`);
+            message.channel.send(inhibition.response);
+            return;
+          }
+          if (inhibition) {
+            logger.info(`Command inhibited for reason: ${inhibition}`);
+            return;
+          }
+        }
       }
 
-      // check arg count
+      // validate arguments
       const argErrorMsg = validateArgs(args, command.arguments);
       if (command.arguments && argErrorMsg) {
         message.channel.send(argErrorMsg);
         return;
       }
 
+      // Execute the commands!
       command.execute(message, args);
       return;
     } catch (error) {
@@ -117,6 +132,10 @@ client.on('message', (message) => {
       message.reply('There was an error trying to execute that command!');
     }
   }
+});
+
+client.on('error', (err) => {
+  logger.error(err);
 });
 
 // Initiate bot login
