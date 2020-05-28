@@ -14,11 +14,8 @@ module.exports = (commands) => {
     name: 'help',
     description: 'Displays help for all commands or a specific command',
     usage: 'help [?command]',
+    arguments: { max: 1 },
     execute(message, args) {
-      if (args.length > 1) {
-        message.channel.send('Too many arguments provided');
-        return;
-      }
       let helpText = fullHelpText;
       if (hasInhibitedCmds) {
         helpText += '\nCommands marked with `*` may have restricted use';
