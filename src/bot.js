@@ -45,7 +45,7 @@ client.on('guildCreate', (guild) => {
 client.on('message', (message) => {
   const { guild, author, content } = message;
 
-  logger.info(
+  logger.verbose(
     `Received message: "${message.content}" (${message.embeds.length} embeds) from "${
       author.username || 'unknownAuthor'
     }:${author.id || 'unknownId'}"`
@@ -53,15 +53,15 @@ client.on('message', (message) => {
 
   // === Gatekeeping ===
   if (author === client.user) {
-    logger.info('Message from myself, no action');
+    logger.verbose('Message from myself, no action');
     return;
   }
   if (author.bot) {
-    logger.info('Message from another bot, ignore');
+    logger.verbose('Message from another bot, ignore');
     return;
   }
   if (guild === null) {
-    logger.info('Message was a DM, alert and ignore');
+    logger.verbose('Message was a DM, alert and ignore');
     message.channel.send('This bot does not currently accept DMs');
     return;
   }
@@ -82,11 +82,18 @@ client.on('message', (message) => {
 
   // === Message Handling ===
   if (content.startsWith(commandPrefix)) {
+    logger.info(
+      `Command received: "${message.content}" (${message.embeds.length} embeds) from "${
+        author.username || 'unknownAuthor'
+      }:${author.id || 'unknownId'}"`
+    );
+
     const args = content.slice(commandPrefix.length).split(/\s+/);
     const commandName = args.shift().toLowerCase();
 
     // check for and retrieve command object
     if (!client.commands.has(commandName)) {
+      logger.info(`Unrecognized Command: ${commandName}`);
       message.channel.send(
         `Unrecognized command. Use \`${commandPrefix}help\` to see available commands`
       );
@@ -119,11 +126,13 @@ client.on('message', (message) => {
       // validate arguments
       const argErrorMsg = validateArgs(args, command.arguments);
       if (command.arguments && argErrorMsg) {
+        logger.info('Command args not valid, alerting');
         message.channel.send(argErrorMsg);
         return;
       }
 
       // Execute the commands!
+      logger.info(`Executing command: "${commandName}" with args: [ ${args.join(', ')} ]`);
       command.execute(message, args);
       return;
     } catch (error) {
@@ -142,7 +151,7 @@ client.login(discordBotToken);
 
 // Shutdown safely
 process.on('SIGINT', () => {
-  logger.info('Caught Interupt Signal, quitting');
+  logger.info('Caught Interrupt Signal, quitting');
 
   client.destroy();
   process.exit();

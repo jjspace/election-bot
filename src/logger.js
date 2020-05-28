@@ -12,9 +12,9 @@ const logger = createLogger({
     }),
     format.errors({ stack: true }),
     format.splat(),
-    format.json(),
+    format.json()
   ),
-  defaultMeta: { },
+  defaultMeta: {},
   transports: [
     //
     // - Write to all logs with level `info` and below to `quick-start-combined.log`.
@@ -26,9 +26,7 @@ const logger = createLogger({
 });
 
 // mimic format.simple but add timestamp to the front
-const timestampSimple = format.printf(({
-  timestamp, level, message, ...rest
-}) => {
+const timestampSimple = format.printf(({ timestamp, level, message, ...rest }) => {
   const stringifiedRest = JSON.stringify(rest);
   if (stringifiedRest !== '{}') {
     return `${timestamp} ${level}: ${message} ${stringifiedRest}`;
@@ -41,13 +39,12 @@ const timestampSimple = format.printf(({
 // with the colorized simple format.
 //
 // if (process.env.NODE_ENV !== 'production') {
-logger.add(new transports.Console({
-  format: format.combine(
-    format.timestamp(),
-    format.colorize(),
-    timestampSimple,
-  ),
-}));
+logger.add(
+  new transports.Console({
+    level: process.env.NODE_ENV !== 'production' ? 'verbose' : 'info',
+    format: format.combine(format.timestamp(), format.colorize(), timestampSimple),
+  })
+);
 // }
 
 module.exports = logger;
