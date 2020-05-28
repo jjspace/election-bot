@@ -1,6 +1,7 @@
 const Discord = require('discord.js');
 const ping = require('./ping');
 const helpGen = require('./help');
+const version = require('./version');
 const prefix = require('./config/prefix');
 const addManager = require('./managers/addmanager');
 const delManager = require('./managers/delmanager');
@@ -31,6 +32,7 @@ commands.set(nominate.name, nominate);
 commands.set(addnomination.name, addnomination);
 commands.set(delnomination.name, delnomination);
 commands.set(speeches.name, speeches);
+commands.set(version.name, version);
 
 // Generate help command from command definitions
 const help = helpGen(commands);

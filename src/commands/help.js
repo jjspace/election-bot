@@ -3,7 +3,10 @@ const cmdString = ({ name, usage, description, inhibitors }) =>
 
 module.exports = (commands) => {
   let fullHelpText = '**`help`**\nDisplay this help page\n';
-  fullHelpText += commands.map(cmdString).join('\n');
+  fullHelpText += commands
+    .filter((cmd) => !cmd.hidden)
+    .map(cmdString)
+    .join('\n');
 
   let hasInhibitedCmds = commands.find((cmd) => cmd.inhibitors);
 
@@ -24,9 +27,13 @@ module.exports = (commands) => {
       const targetCmd = args.shift();
       if (targetCmd) {
         const command = commands.get(targetCmd);
-        helpText = cmdString(command);
-        if (command.inhibitors) {
-          helpText += '\nThis command may have restricted use';
+        if (!command || (command && command.hidden)) {
+          helpText = 'Unrecognized command';
+        } else {
+          helpText = cmdString(command);
+          if (command.inhibitors) {
+            helpText += '\nThis command may have restricted use';
+          }
         }
       }
 
