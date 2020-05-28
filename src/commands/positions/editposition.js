@@ -1,5 +1,6 @@
 const dbClient = require('../../db/dbClient');
 const { withServerDB } = require('../commandMods');
+const requireManager = require('../../inhibitors/requireManager');
 
 const PositionProps = ['name', 'desc'];
 const propDisplay = PositionProps.map((p) => `"${p}"`).join(', ');
@@ -9,7 +10,7 @@ const editposition = {
   description: "Edit a position's details",
   usage: 'editposition [position id] ["name"|"desc"] [new value]',
   arguments: { min: 3, errorMsg: { lowMsg: 'Must provide an id, property and new value' } },
-  restricted: true,
+  inhibitors: [requireManager],
   execute(serverDb, message, args) {
     const positionId = args.shift();
     const positionProp = args.shift();

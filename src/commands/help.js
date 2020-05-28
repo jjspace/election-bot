@@ -1,11 +1,11 @@
-const cmdString = ({ name, usage, description, restricted }) =>
-  `**\`${name}\`${restricted ? '*' : ''}** ${usage ? ` - ${usage}` : ''}\n${description || ''}`;
+const cmdString = ({ name, usage, description, inhibitors }) =>
+  `**\`${name}\`${inhibitors ? '*' : ''}** ${usage ? ` - ${usage}` : ''}\n${description || ''}`;
 
-module.exports = commands => {
+module.exports = (commands) => {
   let fullHelpText = '**`help`**\nDisplay this help page\n';
   fullHelpText += commands.map(cmdString).join('\n');
 
-  let hasRestrictedCmds = commands.find(cmd => cmd.restricted);
+  let hasInhibitedCmds = commands.find((cmd) => cmd.inhibitors);
 
   return {
     name: 'help',
@@ -17,16 +17,16 @@ module.exports = commands => {
         return;
       }
       let helpText = fullHelpText;
-      if (hasRestrictedCmds) {
-        helpText += '\nCommands marked with `*` may only be used by managers';
+      if (hasInhibitedCmds) {
+        helpText += '\nCommands marked with `*` may have restricted use';
       }
 
       const targetCmd = args.shift();
       if (targetCmd) {
         const command = commands.get(targetCmd);
         helpText = cmdString(command);
-        if (command.restricted) {
-          helpText += '\nThis command may only be used by managers';
+        if (command.inhibitors) {
+          helpText += '\nThis command may have restricted use';
         }
       }
 

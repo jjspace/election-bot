@@ -2,12 +2,13 @@ const { MessageMentions } = require('discord.js');
 const dbClient = require('../../db/dbClient');
 const { withServerDB } = require('../commandMods');
 const { noMentionOpts } = require('../../utils');
+const requireManager = require('../../inhibitors/requireManager');
 
 const addmanager = {
   name: 'addmanager',
   description: 'Add manager role or user',
   usage: 'addmod [userMention|roleMention]',
-  restricted: true,
+  inhibitors: [requireManager],
   arguments: {
     exact: 1,
     errorMsg: {

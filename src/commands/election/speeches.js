@@ -2,13 +2,14 @@ const { MessageEmbed } = require('discord.js');
 const { shuffle } = require('lodash');
 const dbClient = require('../../db/dbClient');
 const { withServerDB } = require('../commandMods');
+const requireManager = require('../../inhibitors/requireManager');
 
 const speeches = {
   name: 'speeches',
   description: 'Output an order for speeches to occur',
   usage: 'speeches [?position id]',
   arguments: { max: 1 },
-  restricted: true,
+  inhibitors: [requireManager],
   execute: function (serverDb, message, args) {
     const nomListStr = (list) =>
       list

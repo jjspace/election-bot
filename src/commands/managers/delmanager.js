@@ -2,6 +2,7 @@ const { MessageMentions } = require('discord.js');
 const dbClient = require('../../db/dbClient');
 const { withServerDB } = require('../commandMods');
 const { noMentionOpts } = require('../../utils');
+const requireManager = require('../../inhibitors/requireManager');
 
 const delmanager = {
   name: 'delmanager',
@@ -15,7 +16,7 @@ const delmanager = {
     },
     structure: [[MessageMentions.USERS_PATTERN], [MessageMentions.ROLES_PATTERN]],
   },
-  restricted: true,
+  inhibitors: [requireManager],
   execute(serverDb, message) {
     // TODO: make more lenient with plaintext args for role names
     //       check against message.guild.roles for valid role name
